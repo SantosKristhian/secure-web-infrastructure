@@ -1,0 +1,122 @@
+
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS
+server {
+    listen 443 ssl;
+    server_name _;
+
+    ssl_certificate /etc/ssl/projetomensal/multidominio.crt;
+    ssl_certificate_key /etc/ssl/projetomensal/multidominio.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    root /opt/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+location /api/ {
+    proxy_pass https://back.local.projetomensal.com.br:8443;
+
+    proxy_ssl_verify off;
+
+    proxy_set_header Host back.local.projetomensal.com.br;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+}
+
+
+
+
+
+
+
+
+    location /keycloak/ {
+        proxy_pass http://back.local.projetomensal.com.br:8081/;
+
+        proxy_set_header Host back.local.projetomensal.com.br:8081;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+
+server {
+    listen 80;
+    server_name front.local.prefpet.com.br;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name front.local.prefpet.com.br;
+
+    ssl_certificate /etc/ssl/projetomensal/multidominio.crt;
+    ssl_certificate_key /etc/ssl/projetomensal/multidominio.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    root /opt/prefpet-frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass https://back.local.prefpet.com.br:8443/;
+
+        proxy_ssl_verify off;
+
+        proxy_set_header Host back.local.prefpet.com.br;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    location /keycloak/ {
+        proxy_pass http://back.local.prefpet.com.br:8081/;
+
+        proxy_set_header Host front.local.prefpet.com.br;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Prefix /keycloak;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host front.local.prefpet.com.br;
+    }
+
+location /realms/ {
+    proxy_pass http://back.local.prefpet.com.br:8081/realms/;
+
+    proxy_set_header Host front.local.prefpet.com.br;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Host front.local.prefpet.com.br;
+}
+
+location /resources/ {
+    proxy_pass http://back.local.prefpet.com.br:8081/resources/;
+
+    proxy_set_header Host front.local.prefpet.com.br;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Host front.local.prefpet.com.br;
+}
+
+
+}
